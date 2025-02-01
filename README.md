@@ -1,3 +1,9 @@
-# -
-模型倍率计算器，适配于new-api、one-api等转发项目
-![image](https://github.com/user-attachments/assets/80ea9da6-a3b6-46ad-ac45-434e6b365ed1)
+# 模型倍率计算器
+
+**在线站点**： [https://www.tools00.cc](https://www.tools00.cc)
+
+模型倍率计算器，适配于 new-api、one-api 等转发项目。  
+支持人民币、美元两种计费方式。  
+项目很简单，只包含一个 HTML 文件，可以使用任意多的方式自行部署。
+
+![image](./photo1.png)
