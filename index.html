@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倍率计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .currency-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .currency-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #4CAF50;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .currency-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .exchange-rate {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        input, select, button {
+            font-size: 18px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+        }
+        button.calculate {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        footer {
+            color: #888;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .exchange-rate input {
+            width: 100px;
+            display: inline;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>倍率计算器</h1>
+
+    <div class="currency-toggle">
+        <button class="currency-btn active" onclick="setCurrency('USD')">美元 (USD)</button>
+        <button class="currency-btn" onclick="setCurrency('CNY')">人民币 (CNY)</button>
+    </div>
+
+    <div class="exchange-rate">
+        汇率：1 美元 = <input type="number" id="exchangeRate" value="7.3" step="0.01" min="0"> 人民币
+    </div>
+
+    <label for="inputPrice">官方每单位输入价格 (<span class="currency-symbol">美元</span>)：</label>
+    <input type="number" id="inputPrice" step="0.0001" required>
+
+    <label for="outputPrice">官方每单位输出价格 (<span class="currency-symbol">美元</span>)：</label>
+    <input type="number" id="outputPrice" step="0.0001" required>
+
+    <label for="unit">单位：</label>
+    <select id="unit">
+        <option value="1000">千tokens</option>
+        <option value="1000000">百万tokens（即1M）</option>
+    </select>
+
+    <button class="calculate" onclick="calculate()">计算</button>
+
+    <div id="result"></div>
+
+    <footer>
+        本页面由v0设计编写
+    </footer>
+
+    <script>
+    let currentCurrency = 'USD';
+
+    function setCurrency(currency) {
+        currentCurrency = currency;
+        document.querySelectorAll('.currency-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[onclick="setCurrency('${currency}')"]`).classList.add('active');
+        
+        const symbol = currency === 'USD' ? '美元' : '人民币';
+        document.querySelectorAll('.currency-symbol').forEach(span => {
+            span.textContent = symbol;
+        });
+    }
+
+    // 监听回车键
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            calculate();
+        }
+    });
+
+    function calculate() {
+        const inputPriceElement = document.getElementById('inputPrice');
+        const outputPriceElement = document.getElementById('outputPrice');
+        const exchangeRateElement = document.getElementById('exchangeRate');
+        
+        let inputPrice = parseFloat(inputPriceElement.value);
+        let outputPrice = parseFloat(outputPriceElement.value);
+        const exchangeRate = parseFloat(exchangeRateElement.value);
+        const unit = parseInt(document.getElementById('unit').value);
+
+        // 检查输入是否为空
+        if (isNaN(inputPrice) || isNaN(outputPrice)) {
+            alert('请输入价格');
+            return;
+        }
+
+        if (isNaN(exchangeRate) || exchangeRate <= 0) {
+            alert('请输入有效的汇率');
+            return;
+        }
+
+        // 如果是人民币，转换为美元进行计算
+        if (currentCurrency === 'CNY') {
+            inputPrice = inputPrice / exchangeRate;
+            outputPrice = outputPrice / exchangeRate;
+        }
+
+        const inputPricePerK = inputPrice / (unit / 1000);
+        const outputPricePerK = outputPrice / (unit / 1000);
+
+        const modelRatio = inputPricePerK / 0.002;
+        const completionRatio = outputPricePerK / inputPricePerK;
+
+        // 格式化数字，保留2位小数
+        const formatNumber = (num) => num.toFixed(2);
+
+        document.getElementById('result').innerHTML = `
+            模型倍率：${formatNumber(modelRatio)}<br>
+            补全倍率：${formatNumber(completionRatio)}
+        `;
+    }
+    </script>
+</body>
+</html>
