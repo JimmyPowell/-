@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多功能计算器</title>
+    <title>多功能工具</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: SimSun, "宋体", serif;
             margin: 0;
             padding: 0;
             display: flex;
@@ -31,15 +31,13 @@
         }
         .tool {
             display: none;
+            max-width: 800px;
+            margin: 0 auto;
         }
         .tool.active {
             display: block;
         }
         /* 倍率计算器样式 */
-        #ratio-calculator {
-            max-width: 600px;
-            margin: 0 auto;
-        }
         .currency-toggle {
             display: flex;
             gap: 10px;
@@ -70,7 +68,12 @@
             box-sizing: border-box;
             padding: 8px;
         }
-        button.calculate, button.convert, button.encrypt {
+        .exchange-rate input {
+            width: 100px;
+            display: inline;
+            margin: 0 5px;
+        }
+        button.calculate, button.convert, button.encrypt, button.generate-pdf {
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -87,20 +90,74 @@
             font-weight: bold;
             margin-top: 20px;
         }
-        .exchange-rate input {
-            width: 100px;
-            display: inline;
-            margin: 0 5px;
-        }
-        /* MD5和SHA工具样式 */
-        #md5-converter, #sha-encryptor {
-            max-width: 600px;
-            margin: 0 auto;
-        }
         .result-label {
             font-weight: bold;
             margin-right: 10px;
         }
+        /* 请假条样式 */
+        .form-content {
+            position: relative;
+            /*padding: 40px;
+            line-height: 2.5;
+            font-size: 16px;
+            background: white;*/
+        }
+        .form-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: normal;
+            margin-bottom: 30px;
+            letter-spacing: 1em;
+            margin-right: -1em;
+        }
+        .form-input {
+            border: none;
+            border-bottom: 1px solid #000;
+            outline: none;
+            padding: 0 5px;
+            font-family: inherit;
+            font-size: inherit;
+            text-align: center;
+        }
+        .form-input.short {
+            width: 60px;
+        }
+        .form-input.medium {
+            width: 120px;
+        }
+        .form-input.long {
+            width: 300px;
+        }
+        /*.form-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+        }
+        .form-corner.top-left {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .form-corner.top-right {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+        }
+        .form-corner.bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+        }
+        .form-corner.bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }*/
     </style>
 </head>
 <body>
@@ -108,10 +165,12 @@
         <div class="sidebar-item active" onclick="showTool('ratio-calculator')">倍率计算器</div>
         <div class="sidebar-item" onclick="showTool('md5-converter')">MD5转换器</div>
         <div class="sidebar-item" onclick="showTool('sha-encryptor')">SHA加密</div>
+        <div class="sidebar-item" onclick="showTool('leave-application')">请假条生成器</div>
     </div>
     <div id="content">
+        <!-- 倍率计算器 -->
         <div id="ratio-calculator" class="tool active">
-            <h1>倍率计算器</h1>
+            <h1 style="font-weight: bold;">倍率计算器</h1>
             <div class="currency-toggle">
                 <button class="currency-btn active" onclick="setCurrency('USD')">美元 (USD)</button>
                 <button class="currency-btn" onclick="setCurrency('CNY')">人民币 (CNY)</button>
@@ -131,6 +190,8 @@
             <button class="calculate" onclick="calculateRatio()">计算</button>
             <div id="ratio-result"></div>
         </div>
+
+        <!-- MD5转换器 -->
         <div id="md5-converter" class="tool">
             <h2>MD5转换器</h2>
             <input type="text" id="md5-input" placeholder="输入要转换的文本">
@@ -141,6 +202,8 @@
             <button class="convert" onclick="convertMD5()">转换</button>
             <div id="md5-result"></div>
         </div>
+
+        <!-- SHA加密 -->
         <div id="sha-encryptor" class="tool">
             <h2>SHA加密</h2>
             <input type="text" id="sha-input" placeholder="输入要加密的文本">
@@ -151,9 +214,35 @@
             <button class="encrypt" onclick="encryptSHA()">加密</button>
             <div id="sha-result"></div>
         </div>
+
+        <!-- 请假条生成器 -->
+        <div id="leave-application" class="tool">
+            <div class="form-content">
+                
+                <h1 class="form-title">请假申请</h1>
+                
+                <div style="text-indent: 2em;">
+                    本人<input type="text" class="form-input medium">，<input type="text" class="form-input medium">专业<input type="text" class="form-input short">班的学生，学号<input type="text" class="form-input medium">。因（原因）<input type="text" class="form-input long">
+                </div>
+                
+                <div style="text-indent: 2em;">
+                    请假，前往<input type="text" class="form-input long">（具体地点），请假时间为：<input type="text" class="form-input short">年<input type="text" class="form-input short">月<input type="text" class="form-input short">日<input type="text" class="form-input short">：<input type="text" class="form-input short">起至<input type="text" class="form-input short">年<input type="text" class="form-input short">月<input type="text" class="form-input short">日<input type="text" class="form-input short">：<input type="text" class="form-input short">止，共计<input type="text" class="form-input short">天，请假情况父母知情，我承诺请假期间严格遵守国家有关法律法规，一切人身、财产、交通安全责任自负。
+                </div>
+                
+                <div style="text-indent: 2em;">
+                    本人联系电话：<input type="text" class="form-input medium">，监护人（父母）<input type="text" class="form-input medium">，联系电话：<input type="text" class="form-input medium">
+                </div>
+                
+                <div style="text-indent: 2em; margin-top: 20px;">
+                    恳请老师批准！
+                </div>
+            </div>
+            <button class="generate-pdf" onclick="generatePDF()">生成PDF</button>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
     let currentCurrency = 'USD';
 
@@ -236,6 +325,19 @@
             result = CryptoJS.SHA512(input).toString();
         }
         document.getElementById('sha-result').textContent = result;
+    }
+
+    function generatePDF() {
+        const element = document.querySelector('.form-content');
+        const opt = {
+            margin: 1,
+            filename: '请假申请.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().from(element).set(opt).save();
     }
 
     // 监听回车键
