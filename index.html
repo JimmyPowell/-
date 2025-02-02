@@ -3,13 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倍率计算器</title>
+    <title>多功能计算器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        #sidebar {
+            width: 200px;
+            background-color: #f1f1f1;
+            height: 100vh;
+            padding: 20px;
+        }
+        #content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .sidebar-item {
+            padding: 10px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: #ddd;
+        }
+        .tool {
+            display: none;
+        }
+        .tool.active {
+            display: block;
+        }
+        /* 倍率计算器样式 */
+        #ratio-calculator {
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
         }
         .currency-toggle {
             display: flex;
@@ -41,7 +70,7 @@
             box-sizing: border-box;
             padding: 8px;
         }
-        button.calculate {
+        button.calculate, button.convert, button.encrypt {
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -53,58 +82,87 @@
             margin: 20px 0;
             cursor: pointer;
         }
-        #result {
-            font-size: 24px;
+        #ratio-result, #md5-result, #sha-result {
+            font-size: 18px;
             font-weight: bold;
             margin-top: 20px;
-        }
-        footer {
-            color: #888;
-            font-size: 14px;
-            text-align: center;
-            margin-top: 40px;
         }
         .exchange-rate input {
             width: 100px;
             display: inline;
             margin: 0 5px;
         }
+        /* MD5和SHA工具样式 */
+        #md5-converter, #sha-encryptor {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .result-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>倍率计算器</h1>
-
-    <div class="currency-toggle">
-        <button class="currency-btn active" onclick="setCurrency('USD')">美元 (USD)</button>
-        <button class="currency-btn" onclick="setCurrency('CNY')">人民币 (CNY)</button>
+    <div id="sidebar">
+        <div class="sidebar-item active" onclick="showTool('ratio-calculator')">倍率计算器</div>
+        <div class="sidebar-item" onclick="showTool('md5-converter')">MD5转换器</div>
+        <div class="sidebar-item" onclick="showTool('sha-encryptor')">SHA加密</div>
+    </div>
+    <div id="content">
+        <div id="ratio-calculator" class="tool active">
+            <h1>倍率计算器</h1>
+            <div class="currency-toggle">
+                <button class="currency-btn active" onclick="setCurrency('USD')">美元 (USD)</button>
+                <button class="currency-btn" onclick="setCurrency('CNY')">人民币 (CNY)</button>
+            </div>
+            <div class="exchange-rate">
+                汇率：1 美元 = <input type="number" id="exchangeRate" value="7.3" step="0.01" min="0"> 人民币
+            </div>
+            <label for="inputPrice">官方每单位输入价格 (<span class="currency-symbol">美元</span>)：</label>
+            <input type="number" id="inputPrice" step="0.0001" required>
+            <label for="outputPrice">官方每单位输出价格 (<span class="currency-symbol">美元</span>)：</label>
+            <input type="number" id="outputPrice" step="0.0001" required>
+            <label for="unit">单位：</label>
+            <select id="unit">
+                <option value="1000">千tokens</option>
+                <option value="1000000">百万tokens（即1M）</option>
+            </select>
+            <button class="calculate" onclick="calculateRatio()">计算</button>
+            <div id="ratio-result"></div>
+        </div>
+        <div id="md5-converter" class="tool">
+            <h2>MD5转换器</h2>
+            <input type="text" id="md5-input" placeholder="输入要转换的文本">
+            <select id="md5-case">
+                <option value="lower">小写</option>
+                <option value="upper">大写</option>
+            </select>
+            <button class="convert" onclick="convertMD5()">转换</button>
+            <div id="md5-result"></div>
+        </div>
+        <div id="sha-encryptor" class="tool">
+            <h2>SHA加密</h2>
+            <input type="text" id="sha-input" placeholder="输入要加密的文本">
+            <select id="sha-type">
+                <option value="SHA-256">SHA-256</option>
+                <option value="SHA-512">SHA-512</option>
+            </select>
+            <button class="encrypt" onclick="encryptSHA()">加密</button>
+            <div id="sha-result"></div>
+        </div>
     </div>
 
-    <div class="exchange-rate">
-        汇率：1 美元 = <input type="number" id="exchangeRate" value="7.3" step="0.01" min="0"> 人民币
-    </div>
-
-    <label for="inputPrice">官方每单位输入价格 (<span class="currency-symbol">美元</span>)：</label>
-    <input type="number" id="inputPrice" step="0.0001" required>
-
-    <label for="outputPrice">官方每单位输出价格 (<span class="currency-symbol">美元</span>)：</label>
-    <input type="number" id="outputPrice" step="0.0001" required>
-
-    <label for="unit">单位：</label>
-    <select id="unit">
-        <option value="1000">千tokens</option>
-        <option value="1000000">百万tokens（即1M）</option>
-    </select>
-
-    <button class="calculate" onclick="calculate()">计算</button>
-
-    <div id="result"></div>
-
-    <footer>
-        本页面由v0设计编写
-    </footer>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>
     let currentCurrency = 'USD';
+
+    function showTool(toolId) {
+        document.querySelectorAll('.tool').forEach(tool => tool.classList.remove('active'));
+        document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+        document.getElementById(toolId).classList.add('active');
+        document.querySelector(`.sidebar-item[onclick="showTool('${toolId}')"]`).classList.add('active');
+    }
 
     function setCurrency(currency) {
         currentCurrency = currency;
@@ -119,14 +177,7 @@
         });
     }
 
-    // 监听回车键
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            calculate();
-        }
-    });
-
-    function calculate() {
+    function calculateRatio() {
         const inputPriceElement = document.getElementById('inputPrice');
         const outputPriceElement = document.getElementById('outputPrice');
         const exchangeRateElement = document.getElementById('exchangeRate');
@@ -136,7 +187,6 @@
         const exchangeRate = parseFloat(exchangeRateElement.value);
         const unit = parseInt(document.getElementById('unit').value);
 
-        // 检查输入是否为空
         if (isNaN(inputPrice) || isNaN(outputPrice)) {
             alert('请输入价格');
             return;
@@ -147,7 +197,6 @@
             return;
         }
 
-        // 如果是人民币，转换为美元进行计算
         if (currentCurrency === 'CNY') {
             inputPrice = inputPrice / exchangeRate;
             outputPrice = outputPrice / exchangeRate;
@@ -159,14 +208,49 @@
         const modelRatio = inputPricePerK / 0.002;
         const completionRatio = outputPricePerK / inputPricePerK;
 
-        // 格式化数字，保留2位小数
-        const formatNumber = (num) => num.toFixed(2);
-
-        document.getElementById('result').innerHTML = `
-            模型倍率：${formatNumber(modelRatio)}<br>
-            补全倍率：${formatNumber(completionRatio)}
+        document.getElementById('ratio-result').innerHTML = `
+            模型倍率：${modelRatio.toFixed(2)}<br>
+            补全倍率：${completionRatio.toFixed(2)}
         `;
     }
+
+    function convertMD5() {
+        const input = document.getElementById('md5-input').value;
+        const isUpperCase = document.getElementById('md5-case').value === 'upper';
+        let result32 = CryptoJS.MD5(input).toString();
+        if (isUpperCase) result32 = result32.toUpperCase();
+        const result16 = result32.substring(8, 24);
+        document.getElementById('md5-result').innerHTML = `
+            <div><span class="result-label">16位MD5：</span>${result16}</div>
+            <div><span class="result-label">32位MD5：</span>${result32}</div>
+        `;
+    }
+
+    function encryptSHA() {
+        const input = document.getElementById('sha-input').value;
+        const shaType = document.getElementById('sha-type').value;
+        let result;
+        if (shaType === 'SHA-256') {
+            result = CryptoJS.SHA256(input).toString();
+        } else {
+            result = CryptoJS.SHA512(input).toString();
+        }
+        document.getElementById('sha-result').textContent = result;
+    }
+
+    // 监听回车键
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            const activeToolId = document.querySelector('.tool.active').id;
+            if (activeToolId === 'ratio-calculator') {
+                calculateRatio();
+            } else if (activeToolId === 'md5-converter') {
+                convertMD5();
+            } else if (activeToolId === 'sha-encryptor') {
+                encryptSHA();
+            }
+        }
+    });
     </script>
 </body>
 </html>
