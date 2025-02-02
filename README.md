@@ -1,5 +1,5 @@
 # 模型倍率计算器
-
+### 2.2日新增：md5加密和sha256加密转换
 **在线站点**： [https://www.tools00.cc](https://www.tools00.cc)
 
 模型倍率计算器，适配于 new-api、one-api 等转发项目。  
